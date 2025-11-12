@@ -1,3 +1,4 @@
 {
-  "adminPassword": "change-me"
+  "adminPassword": "change-me",
+  "port": 3000
 }

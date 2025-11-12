@@ -27,6 +27,7 @@ type PersistedState = {
 
 type AppConfig = {
   adminPassword: string;
+  port: number;
 };
 
 const CONFIG_FILE = "config.json";
@@ -259,7 +260,19 @@ async function loadConfig(): Promise<AppConfig> {
     throw new Error(`adminPassword must be a non-empty string in ${CONFIG_FILE}.`);
   }
 
-  return { adminPassword: adminPassword.trim() };
+  const portValue = (raw as { port?: unknown }).port;
+  const defaultPort = 3000;
+  let port = defaultPort;
+
+  if (portValue !== undefined && portValue !== null && portValue !== "") {
+    const parsed = typeof portValue === "number" ? portValue : Number(String(portValue).trim());
+    if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed < 1 || parsed > 65535) {
+      throw new Error(`port in ${CONFIG_FILE} must be an integer between 1 and 65535.`);
+    }
+    port = parsed;
+  }
+
+  return { adminPassword: adminPassword.trim(), port };
 }
 
 async function extractPasswordFromRequest(req: Request): Promise<string | null> {
@@ -320,6 +333,7 @@ try {
 }
 
 const server = serve({
+  port: config.port,
   routes: {
     "/*": index,
 
